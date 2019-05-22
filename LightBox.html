@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>lightbox</title>
+  <style type="text/css">
+    * {
+      margin: 0;
+padding-top: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      font-family: sans-serif;
+    }
+
+    body,
+    html {
+      height: 25%;
+    }
+
+    .parallax {
+      /* The image used */
+      background-image: url("ade.jpeg");
+      /* Full height */
+      height: 100%;
+      /* Create the parallax scrolling effect */
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
+    h1 {
+      font-size: 75px;
+      text-align: center;
+      font-family: 'Roboto';
+      background: -webkit-linear-gradient(#f10505, #f18405, #f1e805, #02c314, #0263e7, #7802e7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;;
+
+    }
+
+    /* p {
+      padding: 0.5em 3em 0.5em 3em;
+      font-family: 'Roboto';
+      font-size: 20px;
+    } */
+    #slideshow {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .overlay {
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      /* fixed prevents the image and overlay from scrolling */
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .big {
+      /* translate center method */
+      /* works best when applied to opject itself */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .pic {
+      padding: 0;
+    }
+
+    #lb,
+    #rb {
+      width: 32px;
+      height: 32px;
+      background-color: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    #lb {
+      /* float: left; */
+    }
+
+    #rb {
+      /* float: right; */
+    }
+
+    #controls {
+      z-index: 1000;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      /* use flex to spread out the buttons that are attached to this object */
+      /* this eliminates the need to use float */
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #cap {
+      color: rgb(255, 255, 255);
+      background-color: rgba(0, 0, 0, 0.5);
+      font-size: 2em;
+      font-family: sans-serif;
+      position: absolute;
+      /* text-align: center; */
+      height: 2em;
+      /* use flex to align things both vertically and horizontally */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      /* border: 1px solid yellow; */
+    }
+  </style>
+  <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.js"></script> -->
+  <script type="text/javascript" src="jquery-3.1.1.js"></script>
+  </style>
+  <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.js"></script> -->
+  <script type="text/javascript" src="jquery-3.1.1.js"></script>
+  <script type="text/javascript">
+    $(document).ready(() => {
+      // $(document).ready(function() {
+      $('#slideshow').append('<div class="overlay"></div>')
+      $('.overlay').append('<div id = "controls"></div>')
+      $('#controls').append('<div id = "lb" class = "controlButton"><img src="arrow_rightt.png"></div>')
+      $('#controls').append('<div id = "rb" class = "controlButton"><img src="arrow_leftt.png"></div>')
+      $('#controls').append('<div id = "cap"></div>')
+      //need to make sure z-index of controls keeps it on top
+      $('.overlay').hide()
+      $('p.pic').click(function(e) {
+        e.preventDefault()
+        const imagePath = $(this).children('a').attr('href')
+        $('#cap').html($(this).children('a').attr('title'))
+        $('.overlay').append('<img src = "' + imagePath + '" class = "big">')
+        $('.big').on('load', function() {
+          resizeImage()
+          //use the size data from the image to postition the controls
+          //$('#controls').css('width', $('.big').width())
+          //$('#cap').css({
+          //  width: $('.big').width(),
+          //top: $('.big').height() / 2 - $('#cap').height() + $('.controlButton').height() / 2
+          //}) //end css stuff
+        }) //end load image
+        $('.overlay').fadeIn('slow')
+      }) //end pic click
+      $('.overlay').click(function(e) {
+        clearBigImage()
+      }) //end click overlay
+      const pathList = []
+      const titleList = []
+      const totalImages = $('#slideshow .pic').length
+      for (let i = 0; i < totalImages; i++) {
+        pathList[i] = $('#slideshow a').eq(i).attr('href')
+        titleList[i] = $('#slideshow a').eq(i).attr('title')
+      }
+      let currentImageNumber
+      $('#lb').click(function(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        currentImageNumber = pathList.indexOf($('.big').attr('src'))
+        currentImageNumber--
+        if (currentImageNumber >= 0) {
+          updateImageAndTitle()
+        } else {
+          clearBigImage()
+        }
+      }) //end lb click
+      $('#rb').click(function(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        currentImageNumber = pathList.indexOf($('.big').attr('src'))
+        currentImageNumber++
+        if (currentImageNumber < totalImages) {
+          updateImageAndTitle()
+        } else {
+          clearBigImage()
+        }
+      }) //end rb click
+      function updateImageAndTitle() {
+        //update image
+        $('.big, #controls').fadeOut(500, function() {
+          $('.big').attr('src', pathList[currentImageNumber])
+          $('#cap').html(titleList[currentImageNumber])
+        })
+        $('.big, #controls').fadeIn(500)
+      } //end updateImageAndTitle
+      function clearBigImage() {
+        $('.overlay').fadeOut('slow')
+        $('.big').remove()
+      } //end clearBigImage
+      $(window).resize(function() {
+        resizeImage()
+      })
+
+      function resizeImage() {
+        $('.big').css('width', "")
+        $('.big').css('height', "")
+        const cHeight = $(window).height()
+        const cWidth = $(window).width()
+        const iHeight = $('.big').height()
+        const iWidth = $('.big').width()
+        let ratio = 1
+        let newHeight;
+        let newWidth;
+        if (iHeight >= iWidth) {
+          //portrait iheight is greater than iwidth. = means square
+          newHeight = cHeight * 0.9
+          ratio = cHeight / iHeight
+          newWidth = iWidth * ratio
+          if (newWidth > cWidth * 0.9) {
+            //portrait iheight is greater than iwidth. = means square
+            ratio = cWidth / newWidth
+            newWidth = cWidth * 0.9
+            newHeight *= ratio
+          }
+        } else if (iHeight < iWidth) {
+          //landscape iheight is less than iwidth
+          newWidth = cWidth * 0.9
+          ratio = cWidth / iWidth
+          newHeight = iHeight * ratio
+          if (newHeight > cHeight * 0.9) {
+            //landscape iheight is less than iwidth
+            ratio = cHeight / newHeight
+            newHeight = cHeight * 0.9
+            newWidth *= ratio
+          }
+        } else {
+          console.log("Something diddly happened");
+        }
+        $('.big').css({
+          height: newHeight,
+          width: newWidth
+        })
+        $('#controls').css('width', newWidth)
+        $('#cap').css({
+          top: newHeight / 2 - $('#cap').height() + $('.controlButton').height() / 2,
+          width: newWidth
+        })
+      }
+    }) //end ready
+  </script>
+</head>
+
+<body>
+  <h1>Genders</h1>
+  <div id="slideshow">
+    <p class="pic">
+      <a href="Agender_flag.png" title="Agender">
+        <img src="intersex.png">
+      </a>
+    </p>
+    <p class="pic">
+      <a href="Trans.png" title="Transgender">
+        <img src="genderqueer.png">
+      </a>
+    </p>
+    <p class="pic">
+      <a href="GenderF.png" title="GenderFluid">
+        <img src="noneB.png">
+      </a>
+    </p>
+  </div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(244, 72, 66, 0.3);font-size:20px">
+    A subclass within a grammatical class (such as noun, pronoun, adjective, or verb) of a language that is partly arbitrary but also partly based on distinguishable characteristics (such as shape, social rank, manner of existence, or sex) and that determines agreement with and selection of other words or grammatical forms
+
+  </div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(239, 136, 26, 0.3);font-size:20px">
+    Agender is a term which can be literally translated as 'without gender'. It can be seen either as a non-binary gender identity or as a statement of not having a gender identity.
+    People who identify as agender may describe themselves as one or more of the following</div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(249, 241, 0, 0.3);font-size:20px">
+    Trans is an umbrella term for those whose gender identity and/or gender expression differs from the sex they were given at birth, for example, transgender or transsexual people. Some trans people may feel that they are a man born into a female
+    body or a woman born into a male body, but not necessarily.
+
+    Trans people may also identify as gender-neutral, genderqueer or gender fluid, non-binary, and may indentify as a combination of male and female or as neither.
+
+    Many trans people know they are trans from a very young age, while others say that they only identified as trans during their teens. The term trans is the preferred term for many transgender people.
+
+    If you are friends with or know a trans person then it's important to address them with the gender they refer to themselves as and refer to them with their chosen name and gender pronoun.
+  </div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(80, 224, 13, 0.3);font-size:20px">
+    A person who is genderfluid prefers to remain flexible about their gender identity rather than committing to a single gender. They may fluctuate between genders or express multiple genders at the same time.</div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(13, 108, 224, 0.3);font-size:20px">
+    Intersex people are individuals born with any of several variations in sex characteristics including chromosomes, gonads, sex hormones, or genitals that,
+    according to the UN Office of the High Commissioner for Human Rights, "do not fit the typical definitions for male or female bodies".
+  </div>
+  <div class="parallax"></div>
+  <div style="height:200px;background-color:rgba(140, 13, 224, 0.3);font-size:20px">
+    Genderqueer is most commonly used to describe a person who feels that his/her gender identity does not fit into the socially constructed "norms" associated with his/her biological sex.</div>
+  <div class="parallax"></div>
+</body>
+
+</html>
